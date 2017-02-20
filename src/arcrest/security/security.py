@@ -2007,3 +2007,159 @@ class PortalTokenSecurityHandler(abstract.BaseSecurityHandler):
 
 
         return pssh
+
+########################################################################
+class BasicAuthSecurityHandler(abstract.BaseSecurityHandler):
+    """
+       This Security Handler handles LDAP based security.
+    """
+
+    _jar = None
+    _handler = None
+    _certificatefile = None
+    _keyfile = None
+    _token = ""
+    _proxy_url = None
+    _proxy_port = None
+    _org_url = None
+    _url = None
+    _surl = None
+    _referer_url = None
+    _parsed_org_url = None
+    _portal_username = None
+    _method = "HANDLER"
+    _login_username = None
+    _username = None
+    _password = None
+    #----------------------------------------------------------------------
+    def __init__(self, org_url, username, password,
+                 proxy_url=None, proxy_port=None):
+        """Constructor"""
+        self._login_username = username
+        self._password = password
+
+        self._proxy_url = proxy_url
+        self._proxy_port = proxy_port
+
+        self._initURL(org_url=org_url,
+                      referer_url=None)
+    _is_portal = False
+    #----------------------------------------------------------------------
+    @property
+    def is_portal(self):
+        if self._is_portal is None:
+            self.check_portal()
+        return self._is_portal
+    #----------------------------------------------------------------------
+    @property
+    def method(self):
+        """get the security handler type"""
+        return self._method
+    #----------------------------------------------------------------------
+    def _initURL(self,
+                 org_url,
+                 referer_url):
+        """ sets proper URLs for AGOL """
+
+
+        if org_url is not None and org_url != '':
+            if not org_url.startswith('http://') and not org_url.startswith('https://'):
+                org_url = 'https://' + org_url
+            self._org_url = org_url
+
+        if self._org_url.lower().find('/sharing/rest') > -1:
+            self._url = self._org_url
+        else:
+            self._url = self._org_url + "/sharing/rest"
+
+        if self._url.startswith('http://'):
+            self._surl = self._url.replace('http://', 'https://')
+        else:
+            self._surl = self._url
+
+        parsed_url = urlparse(self._org_url)
+        self._parsed_org_url = urlunparse((parsed_url[0],parsed_url[1],"","","",""))#added 7/15/2015
+
+        if referer_url is None:
+            self._referer_url = parsed_url.netloc
+
+    #----------------------------------------------------------------------
+    @property
+    def org_url(self):
+        """gets the org_url"""
+        return self._org_url
+    #----------------------------------------------------------------------
+    @property
+    def referer_url(self):
+        """gets the referer url"""
+        return self._referer_url
+    #----------------------------------------------------------------------
+    @property
+    def token(self):
+        """gets the token"""
+        return self._token
+    #----------------------------------------------------------------------
+    @property
+    def username(self):
+        """gets/sets the username"""
+        return self._username
+    #----------------------------------------------------------------------
+    @username.setter
+    def username(self, value):
+        """gets/sets the username"""
+        if isinstance(value, str):
+            self._username = value
+            self._handler = None
+    #----------------------------------------------------------------------
+    @property
+    def password(self):
+        """gets/sets the current password"""
+        return self._password
+    #----------------------------------------------------------------------
+    @password.setter
+    def password(self, value):
+        """gets/sets the current password"""
+        if isinstance(value, str):
+            self._password = value
+            self._handler = None
+    #----------------------------------------------------------------------
+    @property
+    def handler(self):
+        """returns the handler"""
+        if self._handler is None:
+            passman = request.HTTPPasswordMgrWithDefaultRealm()
+            passman.add_password(None,
+                                 self._parsed_org_url,
+                                 self._login_username,
+                                 self.password)
+            self._handler = request.HTTPBasicAuthHandler(passman)
+        return self._handler
+    #----------------------------------------------------------------------
+    @property
+    def cookiejar(self):
+        """gets the cookiejar"""
+        if self._jar is None:
+            self._jar = CookieJar()
+        return self._jar
+
+    #----------------------------------------------------------------------
+    @property
+    def proxy_url(self):
+        """gets the proxy url"""
+        return self._proxy_url
+    #----------------------------------------------------------------------
+    @proxy_url.setter
+    def proxy_url(self, value):
+        """ sets the proxy_url """
+        self._proxy_url = value
+    #----------------------------------------------------------------------
+    @property
+    def proxy_port(self):
+        """ gets the proxy port """
+        return self._proxy_port
+    #----------------------------------------------------------------------
+    @proxy_port.setter
+    def proxy_port(self, value):
+        """ sets the proxy port """
+        if isinstance(value, int):
+            self._proxy_port = value

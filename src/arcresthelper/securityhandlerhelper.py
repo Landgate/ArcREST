@@ -104,7 +104,7 @@ class securityhandlerhelper(object):
     _client_id = None
     _secret_id = None
     _is_portal = False
-    _supported_types = ['LDAP', 'NTLM', 'OAuth', 'Portal', 'PKI', "ArcGIS", "AGS"]
+    _supported_types = ['LDAP', 'NTLM', 'OAuth', 'Portal', 'PKI', "ArcGIS", "AGS", "Basic"]
     _valid = None
     _message = None
 
@@ -271,7 +271,8 @@ class securityhandlerhelper(object):
                                                                              secret_id = self._secret_id,
                                                                              org_url=self._org_url,
                                                                              proxy_url=self._proxy_url,
-                                                                             proxy_port=self._proxy_port)
+                                                                             proxy_port=self._proxy_port,
+                                                                             token_url=self._token_url)
 
                         self._message = "OAuth security handler created"
                 elif str(self._security_type).upper() == 'AGS'.upper():
@@ -286,6 +287,18 @@ class securityhandlerhelper(object):
                                                                                  proxy_url=self._proxy_url,
                                                                                  proxy_port=self._proxy_port)
                         self._message = "AGS security handler created"
+                elif str(self._security_type).upper() == 'BASIC'.upper():
+                    if self._username is None or self._username == '' or \
+                        self._password is None or self._password == '':
+                        self._message = "Username and password required for Basic"
+                        self._valid = False
+                    else:
+                        self._securityHandler = security.BasicAuthSecurityHandler(username=self._username,
+                                                                            password=self._password,
+                                                                            org_url=self._org_url,
+                                                                            proxy_url=self._proxy_url,
+                                                                            proxy_port=self._proxy_port)
+                        self._message = "Basic security handler created"
                 else:
                     print ("No valid security type set")
                     self._message = "No valid security type set"
