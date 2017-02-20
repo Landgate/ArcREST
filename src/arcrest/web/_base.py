@@ -480,7 +480,7 @@ class BaseWebOperations(BaseOperation):
             for k,v in headers.items():
                 req.add_header(k,v)
             if hasContext and self._verify == False:
-                resp = request.urlopen(req, context=ctx)
+                resp = request.urlopen(req)
             else:
                 resp = request.urlopen(req)
         else:
@@ -494,7 +494,7 @@ class BaseWebOperations(BaseOperation):
             req.data = body
             if 'context' in self._has_context(request.urlopen) and \
                self._verify == False:
-                resp = request.urlopen(req, context=ctx)
+                resp = request.urlopen(req)
             else:
                 resp = request.urlopen(req)
             del body, mpf
@@ -651,8 +651,7 @@ class BaseWebOperations(BaseOperation):
             if param_dict is None:
                 req = request.Request(self._asString(url),
                                       headers=pass_headers)
-                resp = request.urlopen(req,
-                                       context=ctx)
+                resp = request.urlopen(req)
             elif len(str(urlencode(param_dict))) + len(url) >= 1999:
                 return self._post(
                     url=url,
@@ -671,8 +670,7 @@ class BaseWebOperations(BaseOperation):
                 format_url = self._asString(url) + "?%s" % urlencode(param_dict)
                 req = request.Request(format_url,
                                       headers=pass_headers)
-                resp = request.urlopen(req,
-                                       context=ctx)
+                resp = request.urlopen(req)
         self._last_code = resp.getcode()
         self._last_url = resp.geturl()
         #  Get some headers from the response
