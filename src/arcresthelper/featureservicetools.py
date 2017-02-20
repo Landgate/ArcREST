@@ -656,7 +656,8 @@ class featureservicetools(securityhandlerhelper):
                         out_fc=None,
                         outSR=None,
                         chunksize=1000,
-                        printIndent=""):
+                        printIndent="",
+                        useAGSFeatureService=False):
 
         """Performs an SQL query against a hosted feature service layer
         and returns all features regardless of service limit.
@@ -678,6 +679,8 @@ class featureservicetools(securityhandlerhelper):
             chunksize (int): The maximum amount of features to query at a time. Defaults to 1000.
             out_fc - only valid if returnFeatureClass is set to True.
                         Output location of query.
+            useAGSFeatureService (boolean) - Whether to use an AGOL FeatureLayer 
+                                                (default or AGS-hosted FeatureService.
 
             Output:
                A list of Feature Objects (default) or a path to the output featureclass if
@@ -688,13 +691,22 @@ class featureservicetools(securityhandlerhelper):
             return
         fl = None
         try:
-            fl = FeatureLayer(url=url, securityHandler=self._securityHandler)
-            qRes = fl.query(where=where,
+            if useAGSFeatureService:
+                fl = FeatureService(url=url, securityHandler=self._securityHandler)
+                qRes = fl.query(where=where,
+                            returnIdsOnly=True,
+                            timeFilter=timeFilter,
+                            geometryFilter=geometryFilter)
+            else:
+                fl = FeatureLayer(url=url, securityHandler=self._securityHandler)
+                qRes = fl.query(where=where,
                             returnIDsOnly=True,
                             timeFilter=timeFilter,
                             geometryFilter=geometryFilter)
 
             if 'error' in qRes:
+                if isinstance(qRes, dict):
+                    qRes = str(qRes)
                 print (printIndent + qRes)
                 return []
             elif 'objectIds' in qRes:
