@@ -365,7 +365,10 @@ class FeatureService(BaseAGSServer):
               returnCountOnly=False,
               returnZ=False,
               returnM=False,
-              outSR=None
+              outSR=None,
+              where=None,
+              objectIds=None,
+              out_fields=None
               ):
         """
            The Query operation is performed on a feature service resource
@@ -393,6 +396,12 @@ class FeatureService(BaseAGSServer):
         if not timeFilter is None and \
            isinstance(timeFilter, TimeFilter):
             params['time'] = timeFilter.filter
+        if where:
+            params['where'] = where
+        if objectIds:
+            params['objectIds'] = objectIds
+        if out_fields:
+            params['outFields'] = out_fields
 
         res = self._post(url=qurl,
                            param_dict=params,
@@ -402,9 +411,9 @@ class FeatureService(BaseAGSServer):
         if returnIdsOnly == False and returnCountOnly == False:
             if isinstance(res, str):
                 jd = json.loads(res)
-                return [FeatureSet.fromJSON(json.dumps(lyr)) for lyr in jd['layers']]
+                return FeatureSet.fromJSON(jsonValue=json.dumps(res))
             elif isinstance(res, dict):
-                return [FeatureSet.fromJSON(json.dumps(lyr)) for lyr in res['layers']]
+                return FeatureSet.fromJSON(jsonValue=json.dumps(res))
             else:
                 return res
         return res
